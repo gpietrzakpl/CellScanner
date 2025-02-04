@@ -8,6 +8,7 @@ import androidx.activity.ComponentActivity
 import androidx.camera.view.PreviewView
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -16,6 +17,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
 
 @Composable
@@ -66,86 +68,147 @@ fun CameraScannerScreen(
             )
         }
 
-        // Obszar wyświetlania zdekodowanych danych – z tłem bardzo ciemnym (alpha = 0.8f)
+        // Link do repozytorium w prawym górnym rogu
+        Box(
+            modifier = Modifier
+                .align(Alignment.TopEnd)
+                .padding(top = 40.dp, end = 8.dp)
+                .background(Color.Black.copy(alpha = 0.5f))
+                .clickable {
+                    val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://github.com/gpietrzak-pl/CellScanner"))
+                    context.startActivity(intent)
+                }
+        ) {
+            Text(
+                text = "Repozytorium",
+                color = Color.White,
+                fontSize = 12.sp,
+                modifier = Modifier.padding(4.dp)
+            )
+        }
+
+        // Obszar wyświetlania zdekodowanych danych – tło bardzo ciemne (alpha = 0.8f)
         if (uiState is UiState.CodeScanned) {
-            Box(
+            // Przyciski i dane umieszczone w jednej kolumnie, przyciski tej samej szerokości
+            Column(
                 modifier = Modifier
                     .align(Alignment.BottomCenter)
                     .fillMaxWidth()
                     .background(Color.Black.copy(alpha = 0.8f))
-                    .padding(16.dp)
+                    .padding(16.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                Column {
+                Text(
+                    text = "Odczytano kod: ${uiState.code}",
+                    color = Color.White,
+                    style = MaterialTheme.typography.bodyLarge
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+                uiState.decodedInfo?.forEach { (key, value) ->
                     Text(
-                        text = "Odczytano kod: ${uiState.code}",
+                        text = "$key: $value",
                         color = Color.White,
-                        style = MaterialTheme.typography.bodyLarge
+                        style = MaterialTheme.typography.bodyMedium
                     )
-                    Spacer(modifier = Modifier.height(8.dp))
-                    uiState.decodedInfo?.forEach { (key, value) ->
-                        Text(
-                            text = "$key: $value",
-                            color = Color.White,
-                            style = MaterialTheme.typography.bodyMedium
-                        )
-                    }
-                    Spacer(modifier = Modifier.height(16.dp))
-                    Row(
-                        horizontalArrangement = Arrangement.Center,
-                        modifier = Modifier.fillMaxWidth()
-                    ) {
-                        Button(onClick = { onOpenUrlClick(uiState.code) }) {
-                            Text("Otwórz w przeglądarce")
-                        }
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Button(onClick = onRescanClick) {
-                            Text("Skanuj ponownie")
-                        }
-                    }
+                }
+                Spacer(modifier = Modifier.height(16.dp))
+                // Wszystkie przyciski o tej samej szerokości, ułożone jeden pod drugim
+                Button(
+                    onClick = { onOpenUrlClick(uiState.code) },
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text("Otwórz w przeglądarce")
+                }
+                Spacer(modifier = Modifier.height(8.dp))
+                Button(
+                    onClick = onRescanClick,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text("Skanuj ponownie")
+                }
+                Spacer(modifier = Modifier.height(8.dp))
+                Button(
+                    onClick = onSwitchLensClick,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text("Zmień obiektyw")
+                }
+                Spacer(modifier = Modifier.height(8.dp))
+                Button(
+                    onClick = {
+                        val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://suppi.pl/gpietrzak"))
+                        context.startActivity(intent)
+                    },
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text("Wesprzyj mnie")
                 }
             }
         } else {
-            // Elementy interfejsu dla pozostałych stanów
+            // Dla pozostałych stanów przyciski umieszczone w kolumnie
             Column(
                 modifier = Modifier
-                    .align(Alignment.BottomEnd)
+                    .align(Alignment.BottomCenter)
+                    .fillMaxWidth()
                     .padding(16.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 when (uiState) {
                     is UiState.NoPermission -> {
                         Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                            Text("Brak uprawnień do kamery.")
+                            Text("Brak uprawnień do kamery.", color = Color.White)
                             Spacer(modifier = Modifier.height(8.dp))
-                            Button(onClick = {
-                                val intent = Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS)
-                                intent.data = Uri.fromParts("package", context.packageName, null)
-                                context.startActivity(intent)
-                            }) {
+                            Button(
+                                onClick = {
+                                    val intent = Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS)
+                                    intent.data = Uri.fromParts("package", context.packageName, null)
+                                    context.startActivity(intent)
+                                },
+                                modifier = Modifier.fillMaxWidth()
+                            ) {
                                 Text("Otwórz ustawienia")
                             }
                         }
                     }
                     is UiState.Scanning -> {
-                        Text("Skanowanie...")
+                        Text("Skanowanie...", color = Color.White)
                     }
                     is UiState.Error -> {
-                        Text("Błąd podczas skanowania.")
-                        Button(onClick = onRescanClick) {
+                        Text("Błąd podczas skanowania.", color = Color.White)
+                        Button(
+                            onClick = onRescanClick,
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
                             Text("Spróbuj ponownie")
                         }
                     }
                     UiState.Idle -> {
-                        Text("Gotowy do skanowania.")
-                        Button(onClick = onRescanClick) {
+                        Text("Gotowy do skanowania.", color = Color.White)
+                        Button(
+                            onClick = onRescanClick,
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
                             Text("Rozpocznij skanowanie")
                         }
                     }
                     else -> {} // Stan CodeScanned obsługiwany powyżej
                 }
-                Spacer(modifier = Modifier.height(16.dp))
-                Button(onClick = onSwitchLensClick) {
+                Spacer(modifier = Modifier.height(8.dp))
+                Button(
+                    onClick = onSwitchLensClick,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
                     Text("Zmień obiektyw")
+                }
+                Spacer(modifier = Modifier.height(8.dp))
+                Button(
+                    onClick = {
+                        val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://suppi.pl/gpietrzak"))
+                        context.startActivity(intent)
+                    },
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text("Wesprzyj mnie")
                 }
             }
         }

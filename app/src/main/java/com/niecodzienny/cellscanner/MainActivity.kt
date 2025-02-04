@@ -9,7 +9,6 @@ import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
 import androidx.compose.material3.Scaffold
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Modifier
 import androidx.core.content.ContextCompat
 import com.niecodzienny.cellscanner.ui.theme.CellScannerTheme
@@ -35,23 +34,15 @@ class MainActivity : ComponentActivity() {
             CellScannerTheme {
                 Scaffold(
                     modifier = Modifier
-                ) { innerPadding ->
-
-                    // Przekazujemy ViewModel do Composable
+                ) {
                     CameraScannerScreen(
                         uiState = scannerViewModel.uiState,
                         onRescanClick = { scannerViewModel.rescan() },
-                        onOpenUrlClick = { code ->
-                            scannerViewModel.openUrl(this, code)
-                        },
+                        onOpenUrlClick = { code -> scannerViewModel.openUrl(this, code) },
                         onSwitchLensClick = { scannerViewModel.switchCameraLens() },
                         scannerViewModel = scannerViewModel
                     )
                 }
-
-                // Możesz też tutaj użyć LaunchedEffect, jeśli trzeba zainicjalizować kamerę
-                // Gdy tylko mamy permissionGranted = true
-                // M.in. można podpiąć startCamery lub bindCameraUseCases
             }
         }
     }
@@ -67,7 +58,6 @@ class MainActivity : ComponentActivity() {
         }
 }
 
-
 // zadanie 2: Udoskonalić funkcjonalność przełączania obiektywu
 // Obecnie przełączanie na kamerę frontową działa poprawnie, ale przełączanie na teleobiektyw
 // (czyli wybór tylnej kamery o najwyższej ogniskowej) nadal nie działa prawidłowo.
@@ -75,9 +65,9 @@ class MainActivity : ComponentActivity() {
 // użycie innego sposobu selekcji) tak, aby funkcjonalność działała dla wszystkich urządzeń.
 // (Pozostawiamy to zadanie do poprawienia.)
 
-//zadanie 3: obsługa kodów typu DataMatrix, teraz to nie działa
+// zadanie 3: Obsługa kodów typu DataMatrix.
+// Aktualnie klient ML Kit został skonfigurowany, aby wykrywać zarówno kody QR, jak i DataMatrix.
+// Jeśli struktura kodów DataMatrix różni się od struktury kodów QR, konieczne może być
+// rozszerzenie dekodera (BatteryQrDecoder) o obsługę DataMatrix.
 
-// zadanie 4: Wyrównanie obszaru skanowania z obszarem wyświetlanym
-// Upewnić się, że obszar analizowany przez kamerę (scanningArea),
-// wyznaczany w ScannerViewModel, jest dokładnie wyrównany z ramką wyświetlaną
-// w interfejsie (ustawioną np. z paddingiem top = 100.dp w CameraScannerScreen).
+// zadanie 4: Wyrównanie obszaru skanowania z obszarem wyświetlanym.

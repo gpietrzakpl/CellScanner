@@ -19,6 +19,8 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.core.content.ContextCompat
 import com.google.mlkit.vision.barcode.BarcodeScanning
+import com.google.mlkit.vision.barcode.BarcodeScannerOptions
+import com.google.mlkit.vision.barcode.common.Barcode
 import com.google.mlkit.vision.common.InputImage
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -82,10 +84,8 @@ class ScannerViewModel : ViewModel() {
     /**
      * Przypisuje podgląd kamery i ustawia obszar skanowania.
      *
-     * Aby pozycja obszaru skanowania odpowiadała wyświetlanej ramce (w UI mamy ramkę
-     * ustawioną z paddingiem top = 100.dp), pobieramy lokalizację PreviewView na ekranie.
-     *
-     * desiredScanningTopDp – wartość (w dp) określająca pozycję ramki w UI.
+     * Obszar skanowania obliczany jest na podstawie szerokości widoku, stałego odstępu od góry (100 dp)
+     * i ma rozmiar 200dp x 200dp – odpowiada to ramce wyświetlanej w UI.
      */
     fun attachPreviewView(previewView: PreviewView, activity: ComponentActivity) {
         this.previewView = previewView
@@ -93,22 +93,13 @@ class ScannerViewModel : ViewModel() {
         previewView.post {
             val density = previewView.resources.displayMetrics.density
             val frameSizePx = (200 * density).toInt()
-            // Wartość taka sama jak w UI (padding top = 100.dp)
-            val desiredScanningTopDp = 100
-            val desiredScanningTopPx = (desiredScanningTopDp * density).toInt()
-            // Pobieramy lokalizację PreviewView na ekranie
-            val location = IntArray(2)
-            previewView.getLocationOnScreen(location)
-            val viewTop = location[1]
-            // Obliczamy pozycję ramki w układzie PreviewView
-            // Jeśli PreviewView nie zaczyna się od 0, korygujemy tę wartość
-            val adjustedTop = desiredScanningTopPx - viewTop
+            val topMarginPx = (100 * density).toInt()  // padding top = 100 dp, jak w UI
             val left = (previewView.width - frameSizePx) / 2
-            val top = adjustedTop
+            val top = topMarginPx
             val right = left + frameSizePx
             val bottom = top + frameSizePx
             scanningArea = Rect(left, top, right, bottom)
-            println("DEBUG: scanningArea=$scanningArea, viewTop=$viewTop, desiredScanningTopPx=$desiredScanningTopPx")
+            println("DEBUG: scanningArea=$scanningArea")
         }
     }
 
@@ -170,7 +161,15 @@ class ScannerViewModel : ViewModel() {
                         InputImage.IMAGE_FORMAT_NV21
                     )
 
-                    val scanner = BarcodeScanning.getClient()
+                    // Konfigurujemy ML Kit, aby wykrywał kody QR oraz DataMatrix
+                    val options = BarcodeScannerOptions.Builder()
+                        .setBarcodeFormats(
+                            Barcode.FORMAT_QR_CODE,
+                            Barcode.FORMAT_DATA_MATRIX
+                        )
+                        .build()
+                    val scanner = BarcodeScanning.getClient(options)
+
                     scanner.process(image)
                         .addOnSuccessListener { barcodes ->
                             if (barcodes.isEmpty()) {
