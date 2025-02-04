@@ -1,3 +1,7 @@
+The English version of the README file can be found here:  
+[https://github.com/gpietrzak-pl/CellScanner/edit/master/readme.en.md](https://github.com/gpietrzak-pl/CellScanner/edit/master/readme.en.md)
+
+
 # CellScanner
 
 CellScanner to otwartoźródłowa aplikacja mobilna na system Android służąca do skanowania kodów **QR** i **DataMatrix** umieszczonych na ogniwach LFP (i nie tylko). 🔍  
