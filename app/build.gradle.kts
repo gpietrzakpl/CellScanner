@@ -59,6 +59,8 @@ dependencies {
     implementation("androidx.camera:camera-camera2:1.2.1")
     implementation("androidx.camera:camera-lifecycle:1.2.1")
     implementation("com.google.mlkit:barcode-scanning:17.3.0")
+    implementation("androidx.lifecycle:lifecycle-viewmodel-ktx:2.6.1")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.7.0") // lub nowsza
     implementation(libs.androidx.camera.view)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
