@@ -42,6 +42,10 @@ sealed class UiState {
 
 class ScannerViewModel : ViewModel() {
 
+    companion object {
+        const val APP_VERSION = "1.0.0"
+    }
+
     var uiState by mutableStateOf<UiState>(UiState.Idle)
         private set
 
@@ -61,14 +65,17 @@ class ScannerViewModel : ViewModel() {
     // Aktualny tryb – początkowo BACK
     private var currentCameraMode = CameraMode.BACK
 
-    // Właściwość przechowująca aktualną wartość ogniskowej (w mm)
+    // Aktualna ogniskowa (w mm)
     var currentFocalLength by mutableStateOf<Float?>(null)
         private set
+
+    // Flaga, która blokuje dalsze skanowanie po zeskanowaniu jednego kodu
+    private var hasScanned = false
 
     private var isAnalyzing = false
     private val executor = Executors.newSingleThreadExecutor()
 
-    // Obszar skanowania – odpowiada ramce wyświetlanej w UI
+    // Obszar skanowania (analizowany przez ML Kit) – centralnie, 200dp x 200dp
     private var scanningArea: Rect? = null
 
     fun hasCameraPermission() = cameraPermissionGranted
@@ -82,20 +89,17 @@ class ScannerViewModel : ViewModel() {
     }
 
     /**
-     * Przypisuje podgląd kamery i ustawia obszar skanowania.
-     *
-     * Obszar skanowania obliczany jest na podstawie szerokości widoku, stałego odstępu od góry (100 dp)
-     * i ma rozmiar 200dp x 200dp – odpowiada to ramce wyświetlanej w UI.
+     * Ustawia podgląd kamery oraz obszar skanowania.
+     * Obszar skanowania to centralnie wyśrodkowany prostokąt o wymiarach 200dp x 200dp.
      */
     fun attachPreviewView(previewView: PreviewView, activity: ComponentActivity) {
         this.previewView = previewView
         this.currentActivity = activity
         previewView.post {
             val density = previewView.resources.displayMetrics.density
-            val frameSizePx = (200 * density).toInt()
-            val topMarginPx = (100 * density).toInt()  // padding top = 100 dp, jak w UI
+            val frameSizePx = (200 * density).toInt()  // obszar analizowany
             val left = (previewView.width - frameSizePx) / 2
-            val top = topMarginPx
+            val top = (previewView.height - frameSizePx) / 2
             val right = left + frameSizePx
             val bottom = top + frameSizePx
             scanningArea = Rect(left, top, right, bottom)
@@ -105,6 +109,7 @@ class ScannerViewModel : ViewModel() {
 
     fun rescan() {
         uiState = UiState.Scanning
+        hasScanned = false
     }
 
     fun startCamera() {
@@ -132,6 +137,11 @@ class ScannerViewModel : ViewModel() {
             .setTargetRotation(previewView.display.rotation)
             .build().also { analyzer ->
                 analyzer.setAnalyzer(executor) { imageProxy ->
+                    // Jeśli już zeskanowano kod, nie przetwarzamy kolejnych klatek.
+                    if (hasScanned) {
+                        imageProxy.close()
+                        return@setAnalyzer
+                    }
                     if (isAnalyzing) {
                         imageProxy.close()
                         return@setAnalyzer
@@ -177,7 +187,6 @@ class ScannerViewModel : ViewModel() {
                             }
 
                             val finalBarcodes = if (scanningArea != null) {
-                                // Sprawdzamy, czy środek bounding boxa znajduje się w obszarze skanowania
                                 val filtered = barcodes.filter { barcode ->
                                     val box = barcode.boundingBox ?: return@filter false
                                     val scaledBox = Rect(
@@ -237,6 +246,8 @@ class ScannerViewModel : ViewModel() {
     }
 
     private fun onBarcodeScanned(code: String) {
+        if (hasScanned) return  // Zapewniamy, że tylko pierwszy kod jest obsłużony.
+        hasScanned = true
         println("DEBUG: Zeskanowano kod: $code")
         if (BatteryQrDecoder.validateCode(code)) {
             val info = BatteryQrDecoder.decodeInformation(code)
@@ -284,7 +295,7 @@ class ScannerViewModel : ViewModel() {
     }
 
     /**
-     * Wyszukuje kamerę tylną o najwyższej wartości ogniskowej (jeśli dostępnych jest więcej niż jedna).
+     * Wyszukuje kamerę tylną o najwyższej ogniskowej (jeśli dostępnych jest więcej niż jedna).
      * Jeśli nie ma więcej niż jednej kamery tylnej, zwracamy null.
      */
     private suspend fun getTelephotoCameraSelector(): CameraSelector? {
@@ -331,7 +342,6 @@ class ScannerViewModel : ViewModel() {
                     lensFacing == CameraSelector.LENS_FACING_BACK
                 }
                 if (backCameras.isNotEmpty()) {
-                    // Dla trybu BACK wybieramy kamerę o najniższej ogniskowej (szerokokątną)
                     val cameraInfo = backCameras.minByOrNull {
                         val focalArray = Camera2CameraInfo.from(it)
                             .getCameraCharacteristic(CameraCharacteristics.LENS_INFO_AVAILABLE_FOCAL_LENGTHS)
@@ -392,9 +402,7 @@ class ScannerViewModel : ViewModel() {
         val yBuffer = imageProxy.planes[0].buffer
         val uBuffer = imageProxy.planes[1].buffer
         val vBuffer = imageProxy.planes[2].buffer
-        // Kopiujemy dane z kanału Y
         yBuffer.get(nv21, 0, ySize)
-        // Zwiększamy kontrast kanału Y
         for (i in 0 until ySize) {
             val y = nv21[i].toInt() and 0xFF
             val yShifted = y - 128

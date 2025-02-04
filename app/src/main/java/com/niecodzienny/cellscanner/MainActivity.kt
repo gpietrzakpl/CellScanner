@@ -70,4 +70,4 @@ class MainActivity : ComponentActivity() {
 // Jeśli struktura kodów DataMatrix różni się od struktury kodów QR, konieczne może być
 // rozszerzenie dekodera (BatteryQrDecoder) o obsługę DataMatrix.
 
-// zadanie 4: Wyrównanie obszaru skanowania z obszarem wyświetlanym.
+// zadanie 4: Wyrównać obszar skanowania z obszarem wyświetlanym.

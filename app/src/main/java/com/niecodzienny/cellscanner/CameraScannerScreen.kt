@@ -16,6 +16,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
@@ -39,34 +40,25 @@ fun CameraScannerScreen(
             modifier = Modifier.fillMaxSize()
         )
 
-        // Obszar skanowania – ustawiony w okolicach 1/3 od góry (padding top = 100.dp)
+        // Jeśli kod został zeskanowany, przyciemniamy cały obraz aparatu
+        if (uiState is UiState.CodeScanned) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(Color.Black.copy(alpha = 0.5f))
+            )
+        }
+
+        // Wyświetlana ramka obszaru skanowania – powiększona o 10% (220dp x 220dp), centralnie
         Box(
             modifier = Modifier
-                .align(Alignment.TopCenter)
-                .padding(top = 100.dp)
-                .size(200.dp)
+                .align(Alignment.Center)
+                .size(220.dp)
                 .border(2.dp, when (uiState) {
                     is UiState.CodeScanned -> Color.Green
                     else -> Color.Red
                 })
         )
-
-        // Nakładka z ogniskową w lewym górnym rogu (padding top = 40.dp)
-        Box(
-            modifier = Modifier
-                .align(Alignment.TopStart)
-                .padding(top = 40.dp, start = 8.dp)
-                .background(Color.Black.copy(alpha = 0.5f))
-        ) {
-            Text(
-                text = "Focal: ${
-                    scannerViewModel.currentFocalLength?.let { String.format("%.1f mm", it) } ?: "?"
-                }",
-                color = Color.White,
-                style = MaterialTheme.typography.bodySmall,
-                modifier = Modifier.padding(4.dp)
-            )
-        }
 
         // Link do repozytorium w prawym górnym rogu
         Box(
@@ -87,9 +79,25 @@ fun CameraScannerScreen(
             )
         }
 
-        // Obszar wyświetlania zdekodowanych danych – tło bardzo ciemne (alpha = 0.8f)
+        // Nakładka z ogniskową w lewym górnym rogu
+        Box(
+            modifier = Modifier
+                .align(Alignment.TopStart)
+                .padding(top = 40.dp, start = 8.dp)
+                .background(Color.Black.copy(alpha = 0.5f))
+        ) {
+            Text(
+                text = "Focal: ${
+                    scannerViewModel.currentFocalLength?.let { String.format("%.1f mm", it) } ?: "?"
+                }",
+                color = Color.White,
+                fontSize = 12.sp,
+                modifier = Modifier.padding(4.dp)
+            )
+        }
+
+        // Obszar wyświetlania zdekodowanych danych – gdy kod został zeskanowany
         if (uiState is UiState.CodeScanned) {
-            // Przyciski i dane umieszczone w jednej kolumnie, przyciski tej samej szerokości
             Column(
                 modifier = Modifier
                     .align(Alignment.BottomCenter)
@@ -98,21 +106,29 @@ fun CameraScannerScreen(
                     .padding(16.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
+                // Tekst z większą czcionką (o 50% więcej) – bazowo bodyLarge
                 Text(
                     text = "Odczytano kod: ${uiState.code}",
                     color = Color.White,
-                    style = MaterialTheme.typography.bodyLarge
+                    style = MaterialTheme.typography.bodyLarge.copy(fontSize = MaterialTheme.typography.bodyLarge.fontSize * 1.5)
                 )
                 Spacer(modifier = Modifier.height(8.dp))
                 uiState.decodedInfo?.forEach { (key, value) ->
+                    val baseStyle = MaterialTheme.typography.bodyMedium.copy(fontSize = MaterialTheme.typography.bodyMedium.fontSize * 1.5)
+                    // Pogrubiamy pola "Cell Chemistry" oraz "Production Date"
+                    val style = if (key == "Cell Chemistry" || key == "Production Date") {
+                        baseStyle.copy(fontWeight = FontWeight.Bold)
+                    } else {
+                        baseStyle
+                    }
                     Text(
                         text = "$key: $value",
                         color = Color.White,
-                        style = MaterialTheme.typography.bodyMedium
+                        style = style
                     )
                 }
                 Spacer(modifier = Modifier.height(16.dp))
-                // Wszystkie przyciski o tej samej szerokości, ułożone jeden pod drugim
+                // Przyciski – wszystkie tej samej szerokości, ułożone jeden pod drugim
                 Button(
                     onClick = { onOpenUrlClick(uiState.code) },
                     modifier = Modifier.fillMaxWidth()
@@ -145,7 +161,7 @@ fun CameraScannerScreen(
                 }
             }
         } else {
-            // Dla pozostałych stanów przyciski umieszczone w kolumnie
+            // Dla pozostałych stanów – przykładowo Idle, Scanning, NoPermission, Error
             Column(
                 modifier = Modifier
                     .align(Alignment.BottomCenter)
