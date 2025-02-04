@@ -73,13 +73,13 @@ Subskrybuj również mój kanał na YouTube: [NieCodzienny Majsterkuje](https://
 Obecna wersja: **1.0.0**
 
 ## Jak uruchomić aplikację
-1. Sklonuj repozytorium:
-   ```bash
-   git clone https://github.com/gpietrzak-pl/CellScanner.git
 
-2. Otwórz projekt w Android Studio.
-3. Zbuduj i uruchom aplikację na urządzeniu lub emulatorze.
-4. Upewnij się, że aplikacja ma przyznane uprawnienie do korzystania z kamery.
+Aby zainstalować aplikację, przejdź do [zakładki Releases](https://github.com/gpietrzak-pl/CellScanner/releases) w repozytorium i pobierz plik APK dla wersji **1.0.0**, np. [CellScanner.apk](https://github.com/gpietrzak-pl/CellScanner/releases/download/v1.0.0/CellScanner.apk).
+
+**Kroki instalacji:**
+1. Upewnij się, że Twoje urządzenie pozwala na instalację aplikacji z nieznanych źródeł.
+2. Prześlij plik APK na urządzenie (np. poprzez kabel USB lub pobierz go bezpośrednio).
+3. Otwórz plik APK, aby rozpocząć instalację.
 
 ## Zadania do dalszego dopracowania
 
