@@ -2,7 +2,7 @@
 
 ## English Version
 
-```md
+
 # CellScanner
 
 CellScanner is an open-source mobile application for Android designed to scan **QR** and **DataMatrix** codes placed on LFP cells (and more). 🔍  
@@ -80,13 +80,16 @@ Also, subscribe to my YouTube channel: [NieCodzienny Majsterkuje](https://www.yo
 ## App Version
 Current version: **1.0.0**
 
-## How to Run the App
-1. Clone the repository:
-   ```bash
-   git clone https://github.com/gpietrzak-pl/CellScanner.git
-2. Open the project in Android Studio.
-3. Build and run the app on a device or emulator.
-4. Ensure that the app has camera access permission.
+## How to Install the App
+
+To install the app, navigate to the [Releases tab](https://github.com/gpietrzak-pl/CellScanner/releases) in the repository and download the APK file for version **1.0.0**, for example [CellScanner.apk](https://github.com/gpietrzak-pl/CellScanner/releases/download/v1.0.0/CellScanner.apk).
+
+**Installation Steps:**
+1. Ensure that your device allows installation from unknown sources.
+2. Transfer the APK file to your device (using a USB cable or by downloading it directly).
+3. Open the APK file to start the installation.
+
+   
 Tasks for Further Improvement
 Task 2: Improve the lens switching functionality.
 Currently, switching to the front camera works, but the telephoto (selecting the rear camera with the highest focal length) requires further refinement.
