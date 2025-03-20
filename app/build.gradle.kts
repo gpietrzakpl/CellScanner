@@ -1,6 +1,8 @@
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.jetbrains.kotlin.android)
+    // id("com.android.application")
+    id("com.google.gms.google-services")
 }
 
 android {
@@ -11,8 +13,9 @@ android {
         applicationId = "com.niecodzienny.cellscanner"
         minSdk = 24
         targetSdk = 34
-        versionCode = 1
-        versionName = "1.0"
+        versionCode = 2
+        versionName = "1.0.1"
+        buildConfigField("String", "BUILD_DATE", "\"2025-03-19\"")
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {
@@ -37,6 +40,7 @@ android {
         jvmTarget = "1.8"
     }
     buildFeatures {
+        buildConfig = true
         compose = true
     }
     composeOptions {
@@ -69,4 +73,8 @@ dependencies {
     androidTestImplementation(libs.androidx.ui.test.junit4)
     debugImplementation(libs.androidx.ui.tooling)
     debugImplementation(libs.androidx.ui.test.manifest)
+    // Firebase BoM
+    implementation(platform("com.google.firebase:firebase-bom:33.1.0"))
+    // Firebase Analytics
+    implementation("com.google.firebase:firebase-analytics")
 }
